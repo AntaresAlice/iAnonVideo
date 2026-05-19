@@ -1,0 +1,5 @@
+node_modules/
+testvideo/
+thumbnails/
+launcher_config.json
+*.log

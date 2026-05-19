@@ -1,0 +1,16 @@
+{
+  "name": "videowebsite",
+  "version": "2.0.0",
+  "description": "A modern self-hosted video player web app with responsive UI",
+  "private": true,
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  },
+  "keywords": ["video", "player", "self-hosted", "streaming"],
+  "license": "MIT"
+}
