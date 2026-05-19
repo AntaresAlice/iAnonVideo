@@ -830,36 +830,33 @@ body {
         border-radius: var(--radius-sm);
     }
 
-    /* Hide extra jump row by default on mobile */
+    /* Show extra jump row on mobile, compact */
     .control-row-extra {
-        max-height: 0;
-        opacity: 0;
-        padding-top: 0;
-        border-top: none;
-        margin-top: 0;
-    }
-
-    .control-row-extra.expanded {
-        max-height: 120px;
+        max-height: 44px;
         opacity: 1;
-        padding-top: 6px;
+        padding-top: 3px;
         border-top: 1px solid var(--border);
-        margin-top: 4px;
+        margin-top: 3px;
     }
 
     /* Compact jump pills on mobile */
     .jump-btn {
-        padding: 4px 8px;
+        padding: 3px 7px;
         font-size: 11px;
+        border-radius: 14px;
     }
     .jump-btn .jump-icon {
-        width: 12px;
-        height: 12px;
+        width: 11px;
+        height: 11px;
     }
     .jump-divider {
         margin: 0 2px;
-        height: 16px;
+        height: 14px;
     }
+    .jump-group {
+        gap: 3px !important;
+    }
+
     .topbar-search input {
         padding-right: 90px;
     }
@@ -895,12 +892,19 @@ body {
     }
 
     .vol-slider {
-        width: 60px;
+        width: 54px;
     }
 
-    /* Hide volume/speed group labels on very small */
     .ctrl-btn .btn-label {
         display: none;
+    }
+
+    .control-row {
+        gap: 2px;
+    }
+
+    .toast {
+        bottom: 140px;
     }
 
     /* Homepage responsive */
@@ -926,6 +930,27 @@ body {
     }
     .home-content { padding: 10px 12px 20px; }
     .home-list .col-path { display: none; }
+
+    /* Mobile fullscreen: taller touch targets */
+    .fullscreen-active .progress-bar {
+        padding: 14px 12px 10px;
+    }
+    .fullscreen-active .control-bar {
+        padding: 4px 12px 20px;
+    }
+    .fullscreen-active .progress-track {
+        height: 8px;
+    }
+    .fullscreen-active .ctrl-btn {
+        min-width: 44px;
+        min-height: 44px;
+    }
+    .fullscreen-active .ctrl-btn-primary {
+        width: 48px;
+        height: 48px;
+        min-width: 48px;
+        min-height: 48px;
+    }
 }
 
 /* ============================================

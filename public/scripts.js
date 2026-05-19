@@ -1041,15 +1041,15 @@
         videoPlayer.currentTime = Math.max(0, Math.min(videoPlayer.currentTime + seconds, videoPlayer.duration));
     };
 
-    skipBackBtn.addEventListener("click", () => jumpTime(-10));
-    skipFwdBtn.addEventListener("click", () => jumpTime(10));
+    skipBackBtn.addEventListener("click", () => jumpTime(isMobile() ? -15 : -10));
+    skipFwdBtn.addEventListener("click", () => jumpTime(isMobile() ? 15 : 10));
 
-    $("#bwd5minBtn").addEventListener("click", () => jumpTime(-300));
-    $("#bwd1minBtn").addEventListener("click", () => jumpTime(-60));
-    $("#bwd30sBtn").addEventListener("click", () => jumpTime(-30));
-    $("#fwd30sBtn").addEventListener("click", () => jumpTime(30));
-    $("#fwd1minBtn").addEventListener("click", () => jumpTime(60));
-    $("#fwd5minBtn").addEventListener("click", () => jumpTime(300));
+    $("#bwd5minBtn").addEventListener("click", function() { jumpTime(parseInt(this.dataset.seconds)); });
+    $("#bwd1minBtn").addEventListener("click", function() { jumpTime(parseInt(this.dataset.seconds)); });
+    $("#bwd15sBtn").addEventListener("click", function() { jumpTime(parseInt(this.dataset.seconds)); });
+    $("#fwd15sBtn").addEventListener("click", function() { jumpTime(parseInt(this.dataset.seconds)); });
+    $("#fwd1minBtn").addEventListener("click", function() { jumpTime(parseInt(this.dataset.seconds)); });
+    $("#fwd5minBtn").addEventListener("click", function() { jumpTime(parseInt(this.dataset.seconds)); });
 
     // ── Fullscreen ──
     const toggleFullscreen = () => {
@@ -1078,6 +1078,11 @@
         document.body.classList.toggle("fullscreen-active", isFS);
         if (isFS && isWebFS) {
             toggleWebFullscreen();
+        }
+        if (isFS) {
+            tryLockOrientation();
+        } else {
+            tryUnlockOrientation();
         }
     };
     document.addEventListener("fullscreenchange", onFullscreenChange);
@@ -1108,6 +1113,22 @@
     };
 
     webFsBtn.addEventListener("click", toggleWebFullscreen);
+
+    // ── Mobile orientation lock ──
+    const tryLockOrientation = () => {
+        if (!screen.orientation || !screen.orientation.lock) return;
+        try {
+            if (videoPlayer.videoWidth > videoPlayer.videoHeight) {
+                screen.orientation.lock("landscape").catch(() => {});
+            }
+        } catch (e) {}
+    };
+
+    const tryUnlockOrientation = () => {
+        if (screen.orientation && screen.orientation.unlock) {
+            try { screen.orientation.unlock(); } catch (e) {}
+        }
+    };
 
     // Double-click video wrapper for fullscreen
     videoWrapper.addEventListener("dblclick", (e) => {
@@ -1145,11 +1166,11 @@
         if (swipeHandled || !isMobile()) return;
         const dx = e.touches[0].clientX - swipeStartX;
         const dy = e.touches[0].clientY - swipeStartY;
-        // Only horizontal swipe
         if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 50) {
             swipeHandled = true;
-            jumpTime(dx > 0 ? 10 : -10);
-            showToast(dx > 0 ? "+10s" : "-10s", 1000);
+            const s = isMobile() ? 15 : 10;
+            jumpTime(dx > 0 ? s : -s);
+            showToast((dx > 0 ? "+" : "-") + s + "s", 1000);
         }
     }, { passive: true });
 
@@ -1268,6 +1289,7 @@
 
         showHome();
 
+        updateMobileLabels();
         loadVolume();
         loadSpeed();
 
@@ -1281,7 +1303,20 @@
     init();
 
     // ── Responsive sidebar state sync ──
+    const updateMobileLabels = () => {
+        const ml = isMobile();
+        const bl = skipBackBtn.querySelector(".btn-label");
+        const fl = skipFwdBtn.querySelector(".btn-label");
+        if (bl) { bl.textContent = ml ? "-15s" : "-10s"; }
+        if (fl) { fl.textContent = ml ? "+15s" : "+10s"; }
+        skipBackBtn.setAttribute("aria-label", ml ? "Skip back 15s" : "Skip back 10s");
+        skipBackBtn.setAttribute("title", ml ? "-15s" : "-10s");
+        skipFwdBtn.setAttribute("aria-label", ml ? "Skip forward 15s" : "Skip forward 10s");
+        skipFwdBtn.setAttribute("title", ml ? "+15s" : "+10s");
+    };
+
     window.addEventListener("resize", () => {
+        updateMobileLabels();
         if (!isMobile() && sidebar.classList.contains("open")) {
             closeSidebar();
         }
