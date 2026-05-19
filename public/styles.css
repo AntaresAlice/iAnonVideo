@@ -1053,6 +1053,30 @@ body {
     color: var(--text-primary);
 }
 
+/* Fullscreen idle: auto-hide controls after inactivity */
+.fullscreen-active .video-info,
+.web-fs-active .video-info {
+    transition: opacity 0.4s ease;
+}
+.fullscreen-active .progress-bar,
+.fullscreen-active .control-bar,
+.web-fs-active .progress-bar,
+.web-fs-active .control-bar {
+    transition: opacity 0.4s ease;
+}
+.fs-idle .video-info {
+    opacity: 0;
+    pointer-events: none;
+}
+.fs-idle .progress-bar,
+.fs-idle .control-bar {
+    opacity: 0;
+    pointer-events: none;
+}
+.fs-idle {
+    cursor: none;
+}
+
 /* ============================================
    WIDESCREEN MODE
    ============================================ */

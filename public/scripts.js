@@ -795,6 +795,7 @@
     const showHome = () => {
         layout.style.display = "none";
         homePage.style.display = "flex";
+        stopFsIdle();
         document.body.classList.remove("fullscreen-active", "web-fs-active", "widescreen-active");
         isWebFS = false;
         isWidescreen = false;
@@ -912,8 +913,16 @@
         }
     });
 
-    videoPlayer.addEventListener("play", updatePlayState);
-    videoPlayer.addEventListener("pause", updatePlayState);
+    videoPlayer.addEventListener("play", () => {
+        updatePlayState();
+        if (document.body.classList.contains("fullscreen-active") && !isMobile()) {
+            resetFsTimer();
+        }
+    });
+    videoPlayer.addEventListener("pause", () => {
+        updatePlayState();
+        showFsControls();
+    });
     videoPlayer.addEventListener("ended", updatePlayState);
 
     // ── Duration / Metadata loaded ──
@@ -1051,6 +1060,48 @@
     $("#fwd1minBtn").addEventListener("click", function() { jumpTime(parseInt(this.dataset.seconds)); });
     $("#fwd5minBtn").addEventListener("click", function() { jumpTime(parseInt(this.dataset.seconds)); });
 
+    // ── Fullscreen idle auto-hide ──
+    let fsIdleTimer = null;
+    let fsIdle = false;
+    const FS_IDLE_DELAY = 3500;
+
+    const showFsControls = () => {
+        document.body.classList.remove("fs-idle");
+        fsIdle = false;
+    };
+
+    const hideFsControls = () => {
+        if (videoPlayer.paused) return;
+        document.body.classList.add("fs-idle");
+        fsIdle = true;
+    };
+
+    const resetFsTimer = () => {
+        if (!document.body.classList.contains("fullscreen-active") &&
+            !document.body.classList.contains("web-fs-active")) return;
+        if (isMobile()) return;
+        showFsControls();
+        clearTimeout(fsIdleTimer);
+        fsIdleTimer = setTimeout(hideFsControls, FS_IDLE_DELAY);
+    };
+
+    const startFsIdle = () => {
+        if (isMobile()) return;
+        document.addEventListener("mousemove", resetFsTimer);
+        document.addEventListener("mousedown", resetFsTimer);
+        showFsControls();
+        resetFsTimer();
+    };
+
+    const stopFsIdle = () => {
+        clearTimeout(fsIdleTimer);
+        fsIdleTimer = null;
+        document.body.classList.remove("fs-idle");
+        fsIdle = false;
+        document.removeEventListener("mousemove", resetFsTimer);
+        document.removeEventListener("mousedown", resetFsTimer);
+    };
+
     // ── Fullscreen ──
     const toggleFullscreen = () => {
         if (!document.fullscreenElement && !document.webkitFullscreenElement) {
@@ -1081,8 +1132,10 @@
         }
         if (isFS) {
             tryLockOrientation();
+            startFsIdle();
         } else {
             tryUnlockOrientation();
+            stopFsIdle();
         }
     };
     document.addEventListener("fullscreenchange", onFullscreenChange);
@@ -1110,6 +1163,11 @@
         webFsExitIcon.style.display  = isWebFS ? "" : "none";
         document.body.classList.toggle("web-fs-active", isWebFS);
         localStorage.setItem("vp_webfs", isWebFS ? "1" : "0");
+        if (isWebFS) {
+            startFsIdle();
+        } else {
+            stopFsIdle();
+        }
     };
 
     webFsBtn.addEventListener("click", toggleWebFullscreen);
@@ -1178,6 +1236,11 @@
     document.addEventListener("keydown", (e) => {
         // Ignore when typing in search
         if (document.activeElement === searchInput) return;
+
+        // Show controls + restart timer on any shortcut in fullscreen/web-fs
+        if (document.body.classList.contains("fs-idle")) {
+            resetFsTimer();
+        }
 
         switch (e.key) {
             case " ":
