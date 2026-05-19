@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0f0f0f">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Video Player</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <!-- 顶部导航栏 -->
+    <header class="topbar" id="topbar">
+        <button class="topbar-btn" id="menuBtn" aria-label="Toggle video list" title="Video List">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <line x1="3" y1="6" x2="21" y2="6"/>
+                <line x1="3" y1="12" x2="21" y2="12"/>
+                <line x1="3" y1="18" x2="21" y2="18"/>
+            </svg>
+        </button>
+        <button class="topbar-btn" id="homeBtn" aria-label="Home" title="Home">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                <polyline points="9 22 9 12 15 12 15 22"/>
+            </svg>
+        </button>
+        <span class="topbar-title">VideoPlayer</span>
+        <div class="topbar-search">
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input type="text" id="searchInput" placeholder="Search videos..." autocomplete="off">
+            <div class="search-toggles">
+                <button class="search-toggle active" id="pathSearchBtn" title="Path Search">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+                        <path d="M12 11v6"/>
+                        <path d="M9 14h6"/>
+                    </svg>
+                </button>
+                <button class="search-toggle" id="wholeWordBtn" title="Match Whole Word">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="5" width="18" height="14" rx="2"/>
+                        <text x="7" y="16" font-size="10" font-family="monospace" font-weight="bold" fill="currentColor" stroke="none">ab</text>
+                    </svg>
+                </button>
+                <button class="search-toggle" id="caseSensitiveBtn" title="Match Case">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <text x="4" y="17" font-size="14" font-family="serif" font-weight="bold" fill="currentColor" stroke="none">Aa</text>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 主布局 -->
+    <div class="layout" id="layout">
+
+        <!-- 侧边栏 / 视频列表 -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <span id="videoCount">0 videos</span>
+                <div class="view-toggle" id="viewToggle">
+                    <button class="view-btn active" data-view="list" title="List view">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                            <line x1="3" y1="6" x2="21" y2="6"/>
+                            <line x1="3" y1="12" x2="21" y2="12"/>
+                            <line x1="3" y1="18" x2="21" y2="18"/>
+                        </svg>
+                    </button>
+                    <button class="view-btn" data-view="tree" title="Folder tree view">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+                            <line x1="12" y1="11" x2="12" y2="17"/>
+                            <line x1="9" y1="14" x2="15" y2="14"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div class="sidebar-list" id="videoList">
+                <div class="empty-hint">No videos found. Place video files in the project directory.</div>
+            </div>
+        </aside>
+
+        <!-- 遮罩层（移动端点击关闭侧边栏） -->
+        <div class="overlay" id="overlay"></div>
+
+        <!-- 主播放区 -->
+        <main class="player-area" id="playerArea">
+
+            <!-- 视频播放器 -->
+            <div class="video-wrapper" id="videoWrapper">
+                <video id="videoPlayer" playsinline>
+                    <source id="videoSource" src="" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+                <!-- 中央大播放按钮（未播放时显示） -->
+                <button class="big-play-btn" id="bigPlayBtn" aria-label="Play">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M8 5v14l11-7z"/>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- 当前视频标题 -->
+            <div class="video-info" id="videoInfo">
+                <span class="video-title" id="videoTitle">Select a video to play</span>
+                <span class="video-duration" id="videoDuration"></span>
+            </div>
+
+            <!-- 进度条 -->
+            <div class="progress-bar" id="progressBar">
+                <div class="progress-track" id="progressTrack">
+                    <div class="progress-fill" id="progressFill"></div>
+                    <div class="progress-thumb" id="progressThumb"></div>
+                </div>
+                <div class="time-display">
+                    <span id="currentTime">0:00</span>
+                    <span> / </span>
+                    <span id="totalTime">0:00</span>
+                </div>
+            </div>
+
+            <!-- 主控制栏 -->
+            <div class="control-bar" id="controlBar">
+                <div class="control-row">
+                    <!-- 左组：播放控制 -->
+                    <div class="control-group">
+                        <button class="ctrl-btn" id="skipBackBtn" aria-label="Skip back 10s" title="-10s">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="1 4 1 10 7 10"/>
+                                <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+                            </svg>
+                            <span class="btn-label">-10s</span>
+                        </button>
+                        <button class="ctrl-btn ctrl-btn-primary" id="playPauseBtn" aria-label="Play / Pause" title="Play / Pause">
+                            <svg id="playIcon" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M8 5v14l11-7z"/>
+                            </svg>
+                            <svg id="pauseIcon" viewBox="0 0 24 24" fill="currentColor" style="display:none">
+                                <rect x="6" y="4" width="4" height="16"/>
+                                <rect x="14" y="4" width="4" height="16"/>
+                            </svg>
+                        </button>
+                        <button class="ctrl-btn" id="skipFwdBtn" aria-label="Skip forward 10s" title="+10s">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="23 4 23 10 17 10"/>
+                                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                            </svg>
+                            <span class="btn-label">+10s</span>
+                        </button>
+                    </div>
+
+                    <!-- 中组：音量 + 速度 -->
+                    <div class="control-group" id="volSpeedGroup">
+                        <div class="volume-control">
+                            <button class="ctrl-btn" id="muteBtn" aria-label="Mute / Unmute" title="Mute">
+                                <svg id="volIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+                                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14" id="volWave1"/>
+                                    <path d="M15.54 8.46a5 5 0 0 1 0 7.07" id="volWave2"/>
+                                </svg>
+                            </button>
+                            <input type="range" class="vol-slider" id="volSlider" min="0" max="100" value="100" aria-label="Volume">
+                        </div>
+                        <select class="speed-select" id="speedSelect" aria-label="Playback speed">
+                            <option value="0.5">0.5x</option>
+                            <option value="0.75">0.75x</option>
+                            <option value="1" selected>1x</option>
+                            <option value="1.25">1.25x</option>
+                            <option value="1.5">1.5x</option>
+                            <option value="2">2x</option>
+                        </select>
+                    </div>
+
+                    <!-- 右组：宽屏 + 网页全屏 + 全屏 + 画中画 -->
+                    <div class="control-group">
+                        <button class="ctrl-btn" id="widescreenBtn" aria-label="Widescreen" title="Widescreen">
+                            <svg id="wsEnterIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="2" y="6" width="20" height="12" rx="2"/>
+                                <polyline points="8 6 8 3 12 3"/>
+                                <polyline points="16 6 16 3 12 3"/>
+                            </svg>
+                            <svg id="wsExitIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+                                <rect x="2" y="6" width="20" height="12" rx="2"/>
+                                <polyline points="8 6 8 9 12 9"/>
+                                <polyline points="16 6 16 9 12 9"/>
+                            </svg>
+                        </button>
+                        <button class="ctrl-btn" id="webFsBtn" aria-label="Web Fullscreen" title="Web Fullscreen">
+                            <svg id="webFsEnterIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="3" width="18" height="18" rx="2"/>
+                                <polyline points="8 8 3 8 3 13"/>
+                                <polyline points="16 16 21 16 21 11"/>
+                            </svg>
+                            <svg id="webFsExitIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+                                <rect x="3" y="3" width="18" height="18" rx="2"/>
+                                <polyline points="8 8 3 8 3 3"/>
+                                <polyline points="16 16 21 16 21 21"/>
+                            </svg>
+                        </button>
+                        <button class="ctrl-btn" id="fullscreenBtn" aria-label="Fullscreen" title="Fullscreen">
+                            <svg id="fsEnterIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="15 3 21 3 21 9"/>
+                                <polyline points="9 21 3 21 3 15"/>
+                                <line x1="21" y1="3" x2="14" y2="10"/>
+                                <line x1="3" y1="21" x2="10" y2="14"/>
+                            </svg>
+                            <svg id="fsExitIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+                                <polyline points="4 8 4 3 9 3"/>
+                                <polyline points="20 16 20 21 15 21"/>
+                                <line x1="4" y1="3" x2="11" y2="10"/>
+                                <line x1="20" y1="21" x2="13" y2="14"/>
+                            </svg>
+                        </button>
+                        <button class="ctrl-btn" id="pipBtn" aria-label="Picture in Picture" title="PiP">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="4" width="18" height="15" rx="2"/>
+                                <rect x="10" y="8" width="9" height="7" rx="1.5"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 第二行：更多跳转按钮 -->
+                <div class="control-row control-row-extra" id="extraControls">
+                    <div class="control-group control-group-center jump-group">
+                        <button class="jump-btn jump-back" id="bwd5minBtn" aria-label="Back 5 minutes">
+                            <svg class="jump-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M11 18h2v-2h-2v2zm1-16C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-11h2v6h-2V9z"/></svg>
+                            <span>5min</span>
+                        </button>
+                        <button class="jump-btn jump-back" id="bwd1minBtn" aria-label="Back 1 minute">
+                            <svg class="jump-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M11 18h2v-2h-2v2zm1-16C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-11h2v6h-2V9z"/></svg>
+                            <span>1min</span>
+                        </button>
+                        <button class="jump-btn jump-back" id="bwd30sBtn" aria-label="Back 30 seconds">
+                            <svg class="jump-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M11 18h2v-2h-2v2zm1-16C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-11h2v6h-2V9z"/></svg>
+                            <span>30s</span>
+                        </button>
+                        <div class="jump-divider"></div>
+                        <button class="jump-btn jump-fwd" id="fwd30sBtn" aria-label="Forward 30 seconds">
+                            <span>30s</span>
+                            <svg class="jump-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M11 18h2v-2h-2v2zm1-16C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-11h2v6h-2V9z"/></svg>
+                        </button>
+                        <button class="jump-btn jump-fwd" id="fwd1minBtn" aria-label="Forward 1 minute">
+                            <span>1min</span>
+                            <svg class="jump-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M11 18h2v-2h-2v2zm1-16C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-11h2v6h-2V9z"/></svg>
+                        </button>
+                        <button class="jump-btn jump-fwd" id="fwd5minBtn" aria-label="Forward 5 minutes">
+                            <span>5min</span>
+                            <svg class="jump-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M11 18h2v-2h-2v2zm1-16C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-11h2v6h-2V9z"/></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- ===== HOMEPAGE ===== -->
+    <div class="home-page" id="homePage">
+        <div class="home-header">
+            <div class="home-header-left">
+                <span class="home-title">Video Library</span>
+                <span class="home-count" id="homeCount">0 videos</span>
+            </div>
+            <div class="home-header-right">
+                <div class="folder-tabs" id="folderTabs"></div>
+                <select class="sort-select" id="sortSelect" aria-label="Sort videos">
+                    <option value="name-asc">Name A-Z</option>
+                    <option value="name-desc">Name Z-A</option>
+                    <option value="folder">By Folder</option>
+                    <option value="recent">Recently Played</option>
+                </select>
+                <div class="home-view-toggle" id="homeViewToggle">
+                    <button class="home-view-btn active" data-home-view="grid" title="Grid view">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="2" y="2" width="7" height="7"/>
+                            <rect x="14" y="2" width="7" height="7"/>
+                            <rect x="2" y="14" width="7" height="7"/>
+                            <rect x="14" y="14" width="7" height="7"/>
+                        </svg>
+                    </button>
+                    <button class="home-view-btn" data-home-view="list" title="List view">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="8" y1="6" x2="21" y2="6"/>
+                            <line x1="8" y1="12" x2="21" y2="12"/>
+                            <line x1="8" y1="18" x2="21" y2="18"/>
+                            <line x1="3" y1="6" x2="3.01" y2="6"/>
+                            <line x1="3" y1="12" x2="3.01" y2="12"/>
+                            <line x1="3" y1="18" x2="3.01" y2="18"/>
+                        </svg>
+                    </button>
+                    <button class="home-view-btn" data-home-view="card" title="Card view">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="2" y="4" width="20" height="16" rx="2"/>
+                            <line x1="2" y1="14" x2="22" y2="14"/>
+                            <line x1="8" y1="18" x2="8" y2="20"/>
+                            <line x1="16" y1="18" x2="16" y2="20"/>
+                        </svg>
+                    </button>
+                    <button class="home-view-btn" data-home-view="tree" title="File tree view">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/>
+                            <polyline points="13 2 13 9 20 9"/>
+                            <path d="M7 13h6"/>
+                            <path d="M7 17h4"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="home-content" id="homeContent"></div>
+    </div>
+
+    <!-- Toast 提示 -->
+    <div class="toast" id="toast"></div>
+
+    <script src="scripts.js"></script>
+</body>
+</html>
