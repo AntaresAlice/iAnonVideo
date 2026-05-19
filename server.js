@@ -73,15 +73,24 @@ const generateThumb = (realPath) => {
     const tmpPath = thumbPath + '.tmp';
     try {
         const result = spawnSync(FFMPEG, [
-            '-y', '-ss', '1', '-i', realPath,
-            '-vframes', '1', '-q:v', '2',
-            '-vf', 'scale=480:-1', tmpPath
+            '-y', '-i', realPath,
+            '-ss', '1', '-vframes', '1',
+            '-q:v', '2', '-vf', 'scale=480:-1',
+            '-f', 'webp', tmpPath
         ], { timeout: 15000, stdio: 'pipe' });
         if (result.status === 0 && fs.existsSync(tmpPath)) {
             fs.renameSync(tmpPath, thumbPath);
             return thumbPath;
         }
-    } catch (_) { /* ffmpeg not available or error */ }
+        const stderr = result.stderr.toString();
+        if (result.error) {
+            console.error(`[thumb] spawn error for "${path.basename(realPath)}":`, result.error.message);
+        } else if (stderr.trim()) {
+            console.error(`[thumb] ffmpeg exit ${result.status} for "${path.basename(realPath)}":`, stderr.slice(-200).trim());
+        }
+    } catch (e) {
+        console.error(`[thumb] cannot run ffmpeg for "${path.basename(realPath)}":`, e.message);
+    }
     try { fs.unlinkSync(tmpPath); } catch (_) {}
     return null;
 };
@@ -91,19 +100,29 @@ const bgGenOne = (realPath) => new Promise((resolve) => {
     if (fs.existsSync(thumbPath)) { resolve(); return; }
     const tmpPath = thumbPath + '.tmp';
     const proc = spawn(FFMPEG, [
-        '-y', '-ss', '1', '-i', realPath,
-        '-vframes', '1', '-q:v', '2',
-        '-vf', 'scale=480:-1', tmpPath
-    ], { stdio: 'ignore' });
+        '-y', '-i', realPath,
+        '-ss', '1', '-vframes', '1',
+        '-q:v', '2', '-vf', 'scale=480:-1',
+        '-f', 'webp', tmpPath
+    ], { stdio: 'pipe' });
+    let stderr = '';
+    proc.stderr.on('data', (d) => { stderr += d.toString(); });
     proc.on('close', (code) => {
         if (code === 0 && fs.existsSync(tmpPath)) {
             try { fs.renameSync(tmpPath, thumbPath); } catch (_) {}
+            console.log(`[thumb] generated: ${path.basename(realPath)}`);
         } else {
             try { fs.unlinkSync(tmpPath); } catch (_) {}
+            if (stderr.trim()) {
+                console.error(`[thumb] bg-fail ${path.basename(realPath)}:`, stderr.slice(-200).trim());
+            }
         }
         resolve();
     });
-    proc.on('error', () => resolve());
+    proc.on('error', (e) => {
+        console.error(`[thumb] bg-error ${path.basename(realPath)}:`, e.message);
+        resolve();
+    });
 });
 
 const startBgThumbGen = async () => {
