@@ -15,6 +15,7 @@ $configFile = Join-Path $scriptDir "launcher_config.json"
 $serverJs   = Join-Path $scriptDir "server.js"
 
 $proc        = $null
+$procId      = 0
 $logTimer    = $null
 $logOutFile  = $null
 $logErrFile  = $null
@@ -509,16 +510,29 @@ function Stop-Server {
         $logTimer = $null
     }
 
+    if ($procId -gt 0) {
+        try {
+            Stop-Process -Id $procId -Force -ErrorAction Stop
+        } catch {
+            try {
+                & taskkill /F /PID $procId 2>$null | Out-Null
+            } catch {}
+        }
+        $procId = 0
+    }
+
     if ($null -ne $proc) {
         try {
             if (-not $proc.HasExited) {
-                $proc.Kill()
+                try { $proc.Kill() } catch {}
                 $proc.WaitForExit(2000) | Out-Null
             }
         } catch {}
         try { $proc.Dispose() } catch {}
         $proc = $null
     }
+
+    Start-Sleep -Milliseconds 400
 
     try { if ($logOutFile -and (Test-Path $logOutFile)) { Remove-Item $logOutFile -Force -ErrorAction SilentlyContinue } } catch {}
     try { if ($logErrFile -and (Test-Path $logErrFile)) { Remove-Item $logErrFile -Force -ErrorAction SilentlyContinue } } catch {}
@@ -547,6 +561,22 @@ function Start-Server {
 
     $paths = @($listBox.Items)
     $port  = $portInput.Value
+
+    $existing = netstat -ano 2>$null | Select-String ":$port\s" | Select-String "LISTENING"
+    if ($existing) {
+        $line = $existing.ToString().Trim()
+        $parts = $line -split '\s+'
+        if ($parts.Count -gt 0) {
+            $existingPid = [int]$parts[$parts.Count - 1]
+            if ($existingPid -gt 0) {
+                Append-Log "[WARN] Port $port is in use by PID $existingPid, attempting to free..." ([System.Drawing.Color]::Orange)
+                try { Stop-Process -Id $existingPid -Force -ErrorAction Stop } catch {
+                    try { & taskkill /F /PID $existingPid 2>$null | Out-Null } catch {}
+                }
+                Start-Sleep -Milliseconds 500
+            }
+        }
+    }
 
     Append-Log ("-" * 50) ([System.Drawing.Color]::DimGray)
     Append-Log "[START] Launching on port $port ..." ([System.Drawing.Color]::Cyan)
@@ -583,14 +613,16 @@ function Start-Server {
     } catch {
         Append-Log "[ERROR] Failed to start process: $_" ([System.Drawing.Color]::Red)
         $proc = $null
+        $procId = 0
         RestoreEnv
         return
     } finally {
         RestoreEnv
     }
 
+    $procId = $proc.Id
     Set-Running
-    Append-Log "[OK] Process started (PID $($proc.Id))" ([System.Drawing.Color]::Green)
+    Append-Log "[OK] Process started (PID $procId)" ([System.Drawing.Color]::Green)
 
     $logTimer = New-Object System.Windows.Forms.Timer
     $logTimer.Interval = 500
@@ -605,6 +637,7 @@ function Start-Server {
                 $exitCode = $proc.ExitCode
                 try { $proc.Dispose() } catch {}
                 $proc = $null
+                $procId = 0
                 Append-Log "[EXIT] Process exited (code $exitCode)" ([System.Drawing.Color]::Red)
                 Set-Stopped
                 return

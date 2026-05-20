@@ -170,12 +170,14 @@ app.use(express.static(path.join(__dirname)));
 
 const videos = allVideos;
 const videosNormalized = videos.map(v => v.replace(/\\/g, '/'));
+const thumbVersion = crypto.createHash('md5').update(realPaths.join('\n')).digest('hex');
 
 app.get('/videos', (req, res) => {
     res.json({
         videos: videosNormalized,
         dirname: '',
         count: videosNormalized.length,
+        thumbVersion,
     });
 });
 
@@ -204,8 +206,16 @@ app.get('/thumb/:index', (req, res) => {
 });
 
 const PORT = process.env.PORT || 4007;
-app.listen(PORT, '0.0.0.0', () => {
+const server = app.listen(PORT, '0.0.0.0', () => {
     console.log(`VideoPlayer server running at http://localhost:${PORT}`);
     console.log(`Found ${videos.length} video(s)`);
 });
 startBgThumbGen();
+
+const shutdown = () => {
+    console.log('\nShutting down...');
+    server.close(() => process.exit(0));
+    setTimeout(() => process.exit(1), 5000);
+};
+process.on('SIGINT', shutdown);
+process.on('SIGTERM', shutdown);

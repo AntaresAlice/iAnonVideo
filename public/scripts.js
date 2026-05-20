@@ -64,6 +64,7 @@
     // ───────── State ─────────
     let allVideos = [];
     let dirname   = "";
+    let thumbVersion = "";
     let currentVideoIndex = -1;
     let isSeeking = false;
     let currentView = "list";
@@ -152,10 +153,12 @@
             const data = await resp.json();
             allVideos = data.videos || [];
             dirname   = data.dirname || "";
+            thumbVersion = data.thumbVersion || "";
         } catch (err) {
             console.error("Failed to fetch videos:", err);
             allVideos = [];
             dirname   = "";
+            thumbVersion = "";
         }
     };
 
@@ -642,7 +645,7 @@
             card.innerHTML = `
                 <div class="home-grid-thumb">
                     <div class="home-grid-thumb-bg" style="background:${grad}">
-                        <img class="home-grid-thumb-img" src="/thumb/${item.index}" onerror="this.style.display='none'" loading="lazy" alt="">
+                        <img class="home-grid-thumb-img" src="/thumb/${item.index}?v=${thumbVersion}" onerror="this.style.display='none'" loading="lazy" alt="">
                         <svg viewBox="0 0 24 24" fill="white" width="36" height="36" opacity="0.4"><path d="M8 5v14l11-7z"/></svg>
                         <div class="play-overlay">
                             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
@@ -692,7 +695,7 @@
             const tr = document.createElement("tr");
             tr.innerHTML = `
                 <td class="col-play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></td>
-                <td class="col-thumb"><img src="/thumb/${item.index}" onerror="this.style.display='none'" loading="lazy" alt=""></td>
+                <td class="col-thumb"><img src="/thumb/${item.index}?v=${thumbVersion}" onerror="this.style.display='none'" loading="lazy" alt=""></td>
                 <td class="col-name">${escapeHTML(fileName)}</td>
                 <td class="col-path">${escapeHTML(folderPath || relPath)}</td>
                 <td class="col-idx">${item.index + 1}</td>
@@ -726,7 +729,7 @@
             card.innerHTML = `
                 <div class="home-card-thumb">
                     <div class="home-card-thumb-bg" style="background:${grad}">
-                        <img class="home-card-thumb-img" src="/thumb/${item.index}" onerror="this.style.display='none'" loading="lazy" alt="">
+                        <img class="home-card-thumb-img" src="/thumb/${item.index}?v=${thumbVersion}" onerror="this.style.display='none'" loading="lazy" alt="">
                         <svg viewBox="0 0 24 24" fill="white" width="40" height="40" opacity="0.35"><path d="M8 5v14l11-7z"/></svg>
                         <div class="play-overlay">
                             <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
