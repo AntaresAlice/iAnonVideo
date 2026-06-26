@@ -1,4 +1,4 @@
-# VideoWebSite Launcher v1.3
+# iAnonVideo Launcher v1.3
 # Run: powershell -ExecutionPolicy Bypass -File launcher.ps1
 
 Add-Type -AssemblyName System.Windows.Forms
@@ -38,7 +38,7 @@ function Save-Config { param($cfg)
 $cfg = Load-Config
 
 $form = New-Object System.Windows.Forms.Form
-$form.Text = "VideoWebSite Launcher"
+$form.Text = "iAnonVideo Launcher"
 $form.Size = New-Object System.Drawing.Size(720, 560)
 $form.StartPosition = "CenterScreen"
 $form.MinimumSize = New-Object System.Drawing.Size(600, 460)
