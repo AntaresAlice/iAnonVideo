@@ -235,6 +235,12 @@ It depends on your browser. `mp4 (H.264)` has the widest compatibility. `mkv` wo
 
 ---
 
+## 🙏 Acknowledgements
+
+This project was developed with the assistance of a coding agent ([opencode](https://github.com/anomalyco/opencode) + DeepSeek-V4-Pro).
+
+---
+
 ## 📄 License
 
 [MIT](LICENSE)

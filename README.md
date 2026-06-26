@@ -237,6 +237,12 @@ iAnonVideo/
 
 ---
 
+## 🙏 致谢
+
+本项目由 Coding Agent（[opencode](https://github.com/anomalyco/opencode) + DeepSeek-V4-Pro）辅助开发。
+
+---
+
 ## 📄 License
 
 [MIT](LICENSE)
